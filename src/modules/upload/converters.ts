@@ -22,23 +22,23 @@ const PNG = pngjs.PNG;
 
 const three: any = THREE;
 
+/* eslint-disable-next-line @typescript-eslint/no-empty-function */
+const noop = () => {};
 /* Mock browser window so three deps run w/o error */
 global.window = global;
 global.atob = atob;
 global.Blob = Blob;
 global.FileReader = FileReader;
 global.TextDecoder = TextDecoder;
-global.requestAnimationFrame = () => {};
+global.requestAnimationFrame = noop;
 global.document = {
-  addEventListener: () => {},
-  removeEventListener: () => {},
+  addEventListener: noop,
+  removeEventListener: noop,
   createElementNS: (namespaceURI, qualifiedName) => {
     if (qualifiedName == 'img') {
       const img: any = new Image();
-      img.removeEventListener = (name, fn) => {};
-      img.addEventListener = (name, fn) => {
-        setTimeout(fn, 10);
-      };
+      img.removeEventListener = noop;
+      img.addEventListener = noop;
       return img;
     }
     throw new Error(`Cannot create node ${qualifiedName}`);
@@ -165,7 +165,7 @@ export default class Converter {
   private initRenderer = () => {
     const webgl = gl(this.width, this.height, { preserveDrawingBuffer: true });
     const canvas: any = {
-      addEventListener: () => {},
+      addEventListener: noop,
     };
 
     this.renderer = new three.WebGLRenderer({
@@ -200,11 +200,11 @@ export default class Converter {
   private loadModel = async (file) => {
     let loader = null;
     let mesh;
-    let material = this.defaultMaterial;
+    const material = this.defaultMaterial;
 
     if (this.ext === 'stl') {
       loader = new three.STLLoader();
-      let geometry = loader.parse(file);
+      const geometry = loader.parse(file);
 
       mesh = new three.Mesh(geometry, this.defaultMaterial);
     } else if (this.ext === 'obj') {
@@ -250,7 +250,7 @@ export default class Converter {
     });
 
     // Don't want to overwrite changes in our actual scene
-    let tempScene = new three.Scene();
+    const tempScene = new three.Scene();
     let foundMesh = false;
     this.scene.traverse((child) => {
       if (child instanceof three.Mesh) {
