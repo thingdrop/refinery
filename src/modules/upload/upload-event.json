@@ -1,0 +1,43 @@
+{
+  "MessageId": "635d391a-158b-445b-9fa7-58578d655dee",
+  "ReceiptHandle": "AQEBZEh5lKI1X9OlkXPi0fR7ih085c8+wAy4f99fYakwyNYfmSvWolSJn/g8/KDPWlct4QmQgHryYO6P2nf1ysSvn4fqla/MG/H0hVF9ZjwsH1Q7CInt95xImGmhyywFV+yndKuz6QfIJH+QCKH7MOYcQNhpufS1H93kTwcXHCf5YwRC5q8I0sBOyi0LEkeetryr7xlopyPnj5MeYF4IaoYWPmg4TlMf3UdH5GIsBISePx1awyctHZNz7VIR5Kj+tMM2xgm67KpN4YAM7NnYuGNL3XNPvb4mWTbdUOho1zxJ3V+QHvBUreDcX3Q+iCJ41v9MMVIBpTCNCC+5BK0YWap5/BDWA3/X2w2JoOmNP+ptP5RnH98+XQWrR30+vs0XDRF7hQv9dJBP3D7Y4QQa47tI4A==",
+  "MD5OfBody": "810edb2ba39c80f09b215a803c1106e8",
+  "Body": {
+    "Records": [
+      {
+        "eventVersion": "2.1",
+        "eventSource": "aws:s3",
+        "awsRegion": "us-east-2",
+        "eventTime": "2020-03-22T05:30:30.855Z",
+        "eventName": "ObjectCreated:Post",
+        "userIdentity": {
+          "principalId": "AWS:AIDA3ETKW6RUPQSZCJA6M"
+        },
+        "requestParameters": {
+          "sourceIPAddress": "67.169.77.48"
+        },
+        "responseElements": {
+          "x-amz-request-id": "5D01A3330B5F6F21",
+          "x-amz-id-2": "UFwehUjP4G5ZB8RToCTmA5xJKrw2U5m0TQdJiCiqgk/8YA7e6YjS6dY3VpW06JqWMo4LgIZP91+c9naIQC/C8Wh40c2WgBqk"
+        },
+        "s3": {
+          "s3SchemaVersion": "1.0",
+          "configurationId": "7c0aafbd-df2c-4ae9-8156-f09419693370",
+          "bucket": {
+            "name": "dev-thingdrop",
+            "ownerIdentity": {
+              "principalId": "A11QOY1Y3ACDA0"
+            },
+            "arn": "arn:aws:s3:::dev-thingdrop"
+          },
+          "object": {
+            "key": "unprocessed/1584855029926-small.stl",
+            "size": 83884,
+            "eTag": "a26d2f3033bf908ffa5f6a7f418bd924",
+            "sequencer": "005E76F7F665D5DDE0"
+          }
+        }
+      }
+    ]
+  }
+}
