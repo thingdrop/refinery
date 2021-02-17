@@ -92,7 +92,7 @@ export class UploadService {
         }),
       ]);
 
-      const [fileHeadResponse, imageHeadResponse] = await Promise.all([
+      const [fileHeadResponse] = await Promise.all([
         this.s3Service.headObject(bucket.name, newKey),
         this.s3Service.headObject(
           process.env.AWS_S3_PUBLIC_BUCKET_NAME,
