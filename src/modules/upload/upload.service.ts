@@ -13,9 +13,9 @@ export class UploadService {
 
   async listen() {
     /* Initialize queue listener */
-    const { AWS_MODEL_UPLOAD_QUEUE_URL } = process.env;
+    const { AWS_REFINERY_QUEUE } = process.env;
     this.listener = this.sqsService.createListener(
-      AWS_MODEL_UPLOAD_QUEUE_URL,
+      AWS_REFINERY_QUEUE,
       this.handleUploadEvent,
     );
     this.listener.start();
@@ -105,8 +105,8 @@ export class UploadService {
         imageKey,
       );
 
-      const { AWS_MODEL_PROCESS_QUEUE_URL } = process.env;
-      await this.sqsService.sendMessage(AWS_MODEL_PROCESS_QUEUE_URL, {
+      const { AWS_SERVITOR_QUEUE } = process.env;
+      await this.sqsService.sendMessage(AWS_SERVITOR_QUEUE, {
         modelId,
         file: {
           originalKey: object.key,

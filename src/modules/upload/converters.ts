@@ -179,7 +179,7 @@ export default class Converter {
 
   private initScene = () => {
     this.scene = new three.Scene();
-    this.scene.background = new three.Color(this.SCENE_CONFIG.backgroundColor);
+    this.scene.background = null; // new three.Color(this.SCENE_CONFIG.backgroundColor);
     this.scene.fog = new three.Fog(this.SCENE_CONFIG.backgroundColor);
   };
 
