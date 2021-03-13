@@ -1,8 +1,7 @@
 import * as zlib from 'zlib';
 import { Injectable, Logger } from '@nestjs/common';
 import { S3Service, SqsService } from '../aws';
-import Converter from './converters';
-import { writeFile } from 'fs';
+import { convertModel, createScreenshot } from './utils';
 
 @Injectable()
 export class UploadService {
@@ -27,17 +26,17 @@ export class UploadService {
 
   /* Connects to POST /upload for locally uploading files (testing) */
   handleFile = async (file) => {
-    const { buffer } = file;
-    const converter = new Converter(buffer.toString('binary'), 'stl');
-    await converter.exportGlb();
-    // const compressedFile = await this.compressFile(glb);
-    // const newKey = this.createKey('models', object.key, 'glb');
-
-    const png: any = await converter.capture();
-    writeFile('test.png', png, (err) => {
-      if (err) throw err;
-      console.log('The file has been saved!');
-    });
+    console.log({ file });
+    // const { buffer } = file;
+    // const converter = new Converter(buffer.toString('binary'), 'stl');
+    // await converter.exportGlb();
+    // // const compressedFile = await this.compressFile(glb);
+    // // const newKey = this.createKey('models', object.key, 'glb');
+    // const png: any = await converter.capture();
+    // writeFile('test.png', png, (err) => {
+    //   if (err) throw err;
+    //   console.log('The file has been saved!');
+    // });
   };
 
   handleUploadEvent = async (message): Promise<void> => {
@@ -51,54 +50,60 @@ export class UploadService {
         bucket.name,
         object.key,
       );
+
       const { model: modelId } = fileResponse.Metadata;
 
-      const ext = this.getFileExtension(object.key).toLowerCase();
+      const extension = this.getFileExtension(object.key).toLowerCase();
 
-      // @TODO: Place this logic into converter? This logic might grow as file types are supported and
-      // is related to converter's concerns.
-      // {{
-      let fileBody;
-      if (ext === 'obj') fileBody = fileResponse.Body.toString('utf-8');
-      //Needed because OBJLoader doesn't support ArrayBuffer
-      else fileBody = fileResponse.Body.buffer;
-      // }}
+      const glb = await convertModel(fileResponse.Body, { extension });
 
-      const converter = new Converter(fileBody, ext);
+      const modelImage = await createScreenshot(glb, {
+        dimensions: {
+          width: 1600,
+          height: 900,
+        },
+        colors: {
+          mesh: '#fafafa',
+          fog: '#1a1a1a',
+        },
+      });
 
-      const compressedFile = await this.compressFile(
-        await converter.exportGlb(),
-      );
+      const compressedGlb = await this.compressFile(glb);
+
       const newKey = this.createKey('models', object.key, 'glb');
 
-      const png = await converter.capture();
-      // fs.writeFileSync('hi.png', png);
-      const imageKey = this.createKey('images', newKey, 'png');
+      const imageKey = this.createKey('images', newKey, 'webp');
 
-      /* Save GLB file & preview PNG to s3 */
+      /* Save GLB file & model image to s3 */
       await Promise.all([
-        this.s3Service.putObject(compressedFile, {
-          bucket: bucket.name,
+        this.s3Service.putObject(compressedGlb, {
+          bucket: process.env.AWS_S3_MODEL_BUCKET_NAME,
           key: newKey,
           metadata: { model: modelId },
           encoding: 'gzip',
           contentType: 'model/gltf-binary',
         }),
-        this.s3Service.putObject(png, {
+        this.s3Service.putObject(modelImage, {
           bucket: process.env.AWS_S3_PUBLIC_BUCKET_NAME,
           key: imageKey,
           metadata: { model: modelId },
-          contentType: 'image/png',
+          contentType: 'image/webp',
         }),
       ]);
 
       const [fileHeadResponse] = await Promise.all([
-        this.s3Service.headObject(bucket.name, newKey),
+        this.s3Service.headObject(process.env.AWS_S3_MODEL_BUCKET_NAME, newKey),
         this.s3Service.headObject(
           process.env.AWS_S3_PUBLIC_BUCKET_NAME,
           imageKey,
         ),
       ]);
+
+      /* Success! Now delete the original model file that user uploaded */
+      await this.s3Service.deleteObject({
+        bucket: bucket.name,
+        key: object.key,
+      });
 
       const imageUrl = this.s3Service.createUrl(
         process.env.AWS_S3_PUBLIC_BUCKET_NAME,
@@ -143,7 +148,7 @@ export class UploadService {
     return `${folder}/${name}.${ext}`;
   }
 
-  getFileExtension = (path) => {
+  getFileExtension = (path): string => {
     const extension = path.slice(path.lastIndexOf('.') + 1);
     return extension.toLowerCase();
   };

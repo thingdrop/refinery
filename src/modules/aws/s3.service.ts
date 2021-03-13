@@ -90,6 +90,17 @@ export class S3Service {
     });
   }
 
+  deleteObject(options) {
+    const { bucket, key } = options;
+    const params = { Bucket: bucket, Key: key };
+    return new Promise((resolve, reject) => {
+      this.s3.deleteObject(params, (error, data) => {
+        if (error) reject(error);
+        resolve(data);
+      });
+    });
+  }
+
   createUrl(bucket: string, key: string) {
     const { region } = this.options.s3;
     return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
