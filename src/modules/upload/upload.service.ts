@@ -2,6 +2,7 @@ import * as zlib from 'zlib';
 import { Injectable, Logger } from '@nestjs/common';
 import { S3Service, SqsService } from '../aws';
 import { convertModel, createScreenshot } from './utils';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UploadService {
@@ -51,7 +52,7 @@ export class UploadService {
         object.key,
       );
 
-      const { model: modelId } = fileResponse.Metadata;
+      const { model: modelId, part: partId } = fileResponse.Metadata;
 
       const extension = this.getFileExtension(object.key).toLowerCase();
 
@@ -70,15 +71,15 @@ export class UploadService {
 
       const compressedGlb = await this.compressFile(glb);
 
-      const newKey = this.createKey('models', object.key, 'glb');
-
-      const imageKey = this.createKey('images', newKey, 'webp');
+      const uuid = uuidv4();
+      const modelKey = `${uuid}.glb`;
+      const imageKey = `images/${uuid}.webp`;
 
       /* Save GLB file & model image to s3 */
       await Promise.all([
         this.s3Service.putObject(compressedGlb, {
           bucket: process.env.AWS_S3_MODEL_BUCKET_NAME,
-          key: newKey,
+          key: modelKey,
           metadata: { model: modelId },
           encoding: 'gzip',
           contentType: 'model/gltf-binary',
@@ -92,7 +93,10 @@ export class UploadService {
       ]);
 
       const [fileHeadResponse] = await Promise.all([
-        this.s3Service.headObject(process.env.AWS_S3_MODEL_BUCKET_NAME, newKey),
+        this.s3Service.headObject(
+          process.env.AWS_S3_MODEL_BUCKET_NAME,
+          modelKey,
+        ),
         this.s3Service.headObject(
           process.env.AWS_S3_PUBLIC_BUCKET_NAME,
           imageKey,
@@ -114,12 +118,12 @@ export class UploadService {
       await this.sqsService.sendMessage(AWS_SERVITOR_QUEUE, {
         modelId,
         file: {
-          originalKey: object.key,
-          key: newKey,
-          imagePreview: imageUrl,
+          partId,
+          key: modelKey,
+          bucket: process.env.AWS_S3_MODEL_BUCKET_NAME,
+          image: imageUrl,
           eTag: fileHeadResponse.ETag,
           size: fileHeadResponse.ContentLength,
-          bucket: bucket.name,
         },
       });
     } catch (error) {
@@ -137,18 +141,7 @@ export class UploadService {
     });
   }
 
-  createKey(folder: string, filename: string, ext: string): string {
-    const name: string = filename
-      .split('/')
-      .slice(1)
-      .join('')
-      .split('.')
-      .slice(0, -1)
-      .join('');
-    return `${folder}/${name}.${ext}`;
-  }
-
-  getFileExtension = (path): string => {
+  getFileExtension = (path: string): string => {
     const extension = path.slice(path.lastIndexOf('.') + 1);
     return extension.toLowerCase();
   };
