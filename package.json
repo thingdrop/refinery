@@ -36,7 +36,7 @@
     "pngjs": "^6.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^6.6.6",
+    "rxjs": "^6.6.7",
     "sqs-consumer": "^5.5.0",
     "three": "^0.126.1",
     "vblob": "^1.0.2"
