@@ -38,7 +38,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.6",
     "sqs-consumer": "^5.5.0",
-    "three": "^0.126.1",
+    "three": "^0.134.0",
     "vblob": "^1.0.2"
   },
   "devDependencies": {
